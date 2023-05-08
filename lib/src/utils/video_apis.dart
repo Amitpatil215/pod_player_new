@@ -15,12 +15,16 @@ class VideoApis {
     String videoId,
   ) async {
     try {
-      final response = await http.get(
+      
+
+  final response = await http.get(
         Uri.parse('https://player.vimeo.com/video/$videoId/config'),
       );
-      final jsonData =
-          jsonDecode(response.body)['request']['files']['progressive'];
-      return List.generate(
+      var jsonData =
+          jsonDecode(response.
+          body)['request']['files']['progressive'];
+
+      var list=  List.generate(
         jsonData.length,
         (index) => VideoQalityUrls(
           quality: int.parse(
@@ -29,6 +33,20 @@ class VideoApis {
           url: jsonData[index]['url'],
         ),
       );
+       if(list.isEmpty){
+         jsonData =  jsonDecode(response.body)['request']['files']['hls']['cdns'];
+
+         var url = jsonData.entries.first.value["url"];
+         list = [];
+
+         jsonData = jsonData.entries.map((entry) => "${entry.key} + ${entry.value}").toList();
+        list.add( VideoQalityUrls(
+           quality: 720,
+           url: url,
+         ));
+
+       }
+       return list;
     } catch (error) {
       if (error.toString().contains('XMLHttpRequest')) {
         log(
